@@ -7,6 +7,10 @@ import (
 )
 
 const (
+	OAUTH_TABLE_NAME = "oauth"
+)
+
+const (
 	OAuthPlatformMobile = "mobile"
 	OAuthPlatformWeb    = "web"
 )
@@ -38,5 +42,5 @@ func NewOAuth() *Oauth {
 }
 
 func (Oauth) TableName() string {
-	return "oauth"
+	return OAUTH_TABLE_NAME
 }

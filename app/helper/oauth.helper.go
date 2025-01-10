@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"fmt"
+	"log/slog"
 	"oauth-server/app/entity"
 	"oauth-server/config"
 	logger "oauth-server/package/log"
@@ -23,12 +23,15 @@ func (h *oauthHelper) GenerateAccessToken(user entity.User) (string, error) {
 	}
 	accessToken, err := utils.GenerateToken(payload, conf.UserAccessTokenKey, utils.USER_ACCESS_TOKEN_IAT)
 	if err != nil {
-		logger.Println(logger.LogPrintln{
-			FileName:  "app/helper/oauth.helper.go",
-			FuncName:  "GenerateAccessToken",
-			TraceData: fmt.Sprintf("%s/%s", *user.Email, *user.PhoneNumber),
-			Msg:       err.Error(),
-		})
+		logger.GetLogger().Info(
+			"GenerateAccessToken",
+			slog.Group(
+				(entity.USER_TABLE_NAME),
+				slog.String("email", *user.Email),
+				slog.String("phone_number", *user.PhoneNumber),
+			),
+			slog.String("error", err.Error()),
+		)
 		return "", err
 	}
 
@@ -43,12 +46,15 @@ func (h *oauthHelper) GenerateRefreshToken(user entity.User) (string, error) {
 	}
 	refreshToken, err := utils.GenerateToken(payload, conf.UserRefreshTokenKey, utils.USER_REFRESH_TOKEN_IAT)
 	if err != nil {
-		logger.Println(logger.LogPrintln{
-			FileName:  "app/service/user.service.go",
-			FuncName:  "GenerateRefreshToken",
-			TraceData: fmt.Sprintf("%s/%s", *user.Email, *user.PhoneNumber),
-			Msg:       err.Error(),
-		})
+		logger.GetLogger().Info(
+			"GenerateRefreshToken",
+			slog.Group(
+				(entity.USER_TABLE_NAME),
+				slog.String("email", *user.Email),
+				slog.String("phone_number", *user.PhoneNumber),
+			),
+			slog.String("error", err.Error()),
+		)
 		return "", err
 	}
 

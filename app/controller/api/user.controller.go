@@ -36,9 +36,8 @@ func (h *accountHandler) login(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(c, 30*time.Second)
 	defer cancel()
-	ctx = context.WithValue(ctx, utils.GIN_CONTEXT_KEY, c)
 
 	res, err := h.services.UserSvc.Login(ctx, &data)
 	if err != nil {
@@ -57,9 +56,8 @@ func (h *accountHandler) register(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(c, 30*time.Second)
 	defer cancel()
-	ctx = context.WithValue(ctx, utils.GIN_CONTEXT_KEY, c)
 
 	res, err := h.services.UserSvc.Register(ctx, &data)
 	if err != nil {
@@ -78,9 +76,8 @@ func (h *accountHandler) logout(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(c, 30*time.Second)
 	defer cancel()
-	ctx = context.WithValue(ctx, utils.GIN_CONTEXT_KEY, c)
 
 	res, err := h.services.UserSvc.Logout(ctx, &data)
 	if err != nil {

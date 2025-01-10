@@ -34,9 +34,8 @@ func (h *oAuthHandler) refreshToken(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(c, 30*time.Second)
 	defer cancel()
-	ctx = context.WithValue(ctx, utils.GIN_CONTEXT_KEY, c)
 
 	res, err := h.services.OAuthSvc.RefreshToken(ctx, &data)
 	if err != nil {

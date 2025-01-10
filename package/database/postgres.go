@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"oauth-server/config"
+	"oauth-server/package/tracing"
 	"oauth-server/utils"
 	"os"
 	"time"
@@ -47,6 +48,10 @@ func InitPostgres() {
 		Logger: dbLogger,
 	})
 	if err != nil {
+		log.Fatalf("error_connecting_to_database: %v", err)
+	}
+
+	if err := conn.Use(tracing.NewSentryPlugin()); err != nil {
 		log.Fatalf("error_connecting_to_database: %v", err)
 	}
 

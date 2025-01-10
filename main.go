@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"oauth-server/app/controller"
 	"oauth-server/app/helper"
 	postgres_repository "oauth-server/app/repository/postgres"
 	"oauth-server/app/service"
 	"oauth-server/config"
-	user_grpc "oauth-server/gRPC/user"
 	"oauth-server/package/database"
 	logger "oauth-server/package/log"
 	_validator "oauth-server/package/validator"
@@ -21,10 +19,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"google.golang.org/grpc"
 )
 
 func main() {
@@ -39,13 +38,12 @@ func main() {
 	helpers := helper.RegisterHelpers(postgresRepo)
 	services := service.RegisterServices(helpers, postgresRepo)
 
-	// Run GRPC Server
-	go startGRPCServer(conf, postgresRepo)
-
 	// Run gin server
 	gin.SetMode(conf.Server.Mode)
-	router := gin.Default()
-	router.Use(gin.LoggerWithWriter(logger.GetLogger().Writer()))
+	app := gin.Default()
+	app.Use(sentrygin.New(sentrygin.Options{
+		Repanic: true,
+	}))
 
 	// Register validator
 	v := binding.Validator.Engine().(*validator.Validate)
@@ -53,26 +51,26 @@ func main() {
 	_validator.RegisterCustomValidators(v)
 
 	// Register controllers
-	router.GET("/health-check", func(c *gin.Context) {
+	app.GET("/health-check", func(c *gin.Context) {
 		c.String(200, "OK")
 	})
-	controller.RegisterControllers(router, services)
+	controller.RegisterControllers(app, services)
 
 	// Start server
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", conf.Server.Port),
-		Handler: router,
+		Handler: app,
 	}
 
 	if !gin.IsDebugging() {
 		go func() {
 			// service connections
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				log.Fatalf("listen: %s\n", err)
+				log.Panicf("listen: %s\n", err)
 			}
 		}()
 
-		quit := make(chan os.Signal)
+		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		<-quit
 		log.Println("Shutdown Server ...")
@@ -91,7 +89,7 @@ func main() {
 		log.Println("Server exiting")
 	} else {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			log.Panicf("listen: %s\n", err)
 		}
 	}
 }
@@ -103,33 +101,15 @@ func init() {
 	config.Init(configFile)
 	database.InitPostgres()
 	logger.Init()
-}
 
-func startGRPCServer(
-	conf *config.Configuration,
-
-	postgresRepo postgres_repository.PostgresRepositoryCollections,
-) {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.GRPC.Port))
-	if err != nil {
-		panic(err)
-	}
-	opts := []grpc.ServerOption{}
-	grpcServer := grpc.NewServer(opts...)
-
-	// Register serever
-	user_grpc.RegisterUserRouteServer(grpcServer, user_grpc.NewUserServer(postgresRepo))
-
-	logger.Println(logger.LogPrintln{
-		FileName:  "main.go",
-		FuncName:  "main",
-		TraceData: "",
-		Msg: fmt.Sprintf(
-			"GRPC Server Running Port - %d",
-			conf.GRPC.Port,
-		),
-	})
-	if err := grpcServer.Serve(lis); err != nil {
-		panic(err)
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:           config.GetConfiguration().Server.SentryDNS,
+		EnableTracing: true,
+		// Set TracesSampleRate to 1.0 to capture 100%
+		// of transactions for tracing.
+		// We recommend adjusting this value in production,
+		TracesSampleRate: 1.0,
+	}); err != nil {
+		log.Panicf("Sentry initialization failed: %v\n", err)
 	}
 }

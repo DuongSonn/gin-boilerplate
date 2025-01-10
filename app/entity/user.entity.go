@@ -8,6 +8,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	USER_TABLE_NAME = "users"
+)
+
 type User struct {
 	gorm.Model
 	ID          uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
@@ -27,7 +31,7 @@ func NewUser() *User {
 }
 
 func (u *User) TableName() string {
-	return "users"
+	return USER_TABLE_NAME
 }
 
 func (u *User) BeforeSave(tx *gorm.DB) error {

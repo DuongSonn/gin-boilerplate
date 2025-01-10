@@ -7,8 +7,9 @@ type JWT struct {
 }
 
 type Server struct {
-	Port int    `mapstructure:"port"`
-	Mode string `mapstructure:"mode"`
+	Port      int    `mapstructure:"port"`
+	Mode      string `mapstructure:"mode"`
+	SentryDNS string `mapstructure:"sentry_dns"`
 }
 
 type GRPC struct {
