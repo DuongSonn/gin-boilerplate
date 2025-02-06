@@ -19,8 +19,8 @@ type User struct {
 	PhoneNumber *string   `json:"phone_number" gorm:"type:varchar(20);"`
 	Password    string    `json:"password" gorm:"type:text;not null"`
 	IsActive    bool      `json:"is_active" gorm:"default:true;type:bool;not null"`
-	CreatedAt   int64     `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt   int64     `json:"updated_at" gorm:"autoUpdateTime:milli"`
+	CreatedAt   int64     `json:"created_at" gorm:"type:integer;not null"`
+	UpdatedAt   int64     `json:"updated_at" gorm:"type:integer;not null"`
 }
 
 func NewUser() *User {

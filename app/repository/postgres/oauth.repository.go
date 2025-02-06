@@ -61,7 +61,7 @@ func (r *oAuthRepository) FindOAuthByFilter(
 		query = query.Where("token = ?", *filter.Token)
 	}
 	if filter.UserID != nil {
-		query = query.Scopes(findByUserId(*filter.UserID))
+		query = query.Scopes(whereBy(*filter.UserID, "user_id"))
 	}
 	if filter.PlatForm != nil {
 		query = query.Where("platform = ?", *filter.PlatForm)

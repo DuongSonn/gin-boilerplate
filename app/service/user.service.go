@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"oauth-server/app/entity"
 	"oauth-server/app/helper"
@@ -38,8 +39,8 @@ func (s *userService) Login(ctx context.Context, data *model.LoginRequest) (*mod
 
 	// Check user exit
 	user, err := s.postgresRepo.PostgresUserRepo.FindUserByFilter(ctx, nil, &repository.FindUserByFilter{
-		PhoneNumber: &data.PhoneNumber,
-		Email:       &data.Email,
+		PhoneNumber: data.PhoneNumber,
+		Email:       data.Email,
 	})
 	if err != nil {
 		logger.GetLogger().Info(
@@ -104,17 +105,18 @@ func (s *userService) Login(ctx context.Context, data *model.LoginRequest) (*mod
 
 func (s *userService) Register(ctx context.Context, data *model.RegisterRequest) (*model.RegisterResponse, error) {
 	// Check user exited
+	fmt.Println(data)
 	existedUser, err := s.postgresRepo.PostgresUserRepo.FindUsersByFilter(ctx, nil, &repository.FindUserByFilter{
-		PhoneNumber: &data.PhoneNumber,
-		Email:       &data.Email,
+		PhoneNumber: data.PhoneNumber,
+		Email:       data.Email,
 	})
 	if err != nil {
 		logger.GetLogger().Info(
 			"FindUsersByFilter",
 			slog.Group(
 				(entity.USER_TABLE_NAME),
-				slog.String("email", data.Email),
-				slog.String("phone_number", data.PhoneNumber),
+				slog.String("email", *data.Email),
+				slog.String("phone_number", *data.PhoneNumber),
 			),
 			slog.String("error", err.Error()),
 		)
@@ -127,10 +129,20 @@ func (s *userService) Register(ctx context.Context, data *model.RegisterRequest)
 	// Create user
 	tx := database.BeginPostgresTransaction()
 	user := entity.NewUser()
-	user.PhoneNumber = &data.PhoneNumber
-	user.Email = &data.Email
+	user.PhoneNumber = data.PhoneNumber
+	user.Email = data.Email
 	user.Password = data.Password
 	if err := s.postgresRepo.PostgresUserRepo.CreateUser(ctx, tx, user); err != nil {
+		logger.GetLogger().Info(
+			"CreateUser",
+			slog.Group(
+				(entity.USER_TABLE_NAME),
+				slog.String("email", *data.Email),
+				slog.String("phone_number", *data.PhoneNumber),
+			),
+			slog.String("error", err.Error()),
+		)
+
 		tx.WithContext(ctx).Rollback()
 		return nil, errors.New(errors.ErrCodeInternalServerError)
 	}
