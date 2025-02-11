@@ -6,14 +6,14 @@ import (
 
 type HelperCollections struct {
 	OauthHelper OauthHelper
+	UserHelper  UserHelper
 }
 
 func RegisterHelpers(
 	postgresRepo postgres_repository.PostgresRepositoryCollections,
 ) HelperCollections {
-	oauthHelper := NewOauthHelper()
-
 	return HelperCollections{
-		OauthHelper: oauthHelper,
+		OauthHelper: NewOauthHelper(),
+		UserHelper:  NewUserHelper(postgresRepo),
 	}
 }

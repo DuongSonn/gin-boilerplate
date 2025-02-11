@@ -2,7 +2,10 @@ package user
 
 import (
 	context "context"
+	"io"
 	"log/slog"
+	"oauth-server/app/helper"
+	"oauth-server/app/model"
 	"oauth-server/app/repository"
 	postgres_repository "oauth-server/app/repository/postgres"
 	"oauth-server/package/errors"
@@ -16,15 +19,18 @@ import (
 
 type userServiceServer struct {
 	postgresRepo postgres_repository.PostgresRepositoryCollections
+	helpers      helper.HelperCollections
 
 	UnimplementedUserServiceServer
 }
 
 func NewUserServiceServer(
 	postgresRepo postgres_repository.PostgresRepositoryCollections,
+	helpers helper.HelperCollections,
 ) UserServiceServer {
 	return &userServiceServer{
 		postgresRepo: postgresRepo,
+		helpers:      helpers,
 	}
 }
 
@@ -75,7 +81,7 @@ func (s *userServiceServer) GetUsers(data *GetUserRequest, stream UserService_Ge
 			},
 		}); err != nil {
 			logger.GetLogger().Info(
-				"Send UserInfo",
+				"Send GetUsers",
 				slog.String("ID", user.GetUserID()),
 				slog.String("Error", err.Error()),
 			)
@@ -88,7 +94,28 @@ func (s *userServiceServer) GetUsers(data *GetUserRequest, stream UserService_Ge
 }
 
 func (s *userServiceServer) CreateUsers(stream UserService_CreateUsersServer) error {
-	return nil
+	for {
+		user, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(&CreateUserResponse{Success: true})
+		}
+		if err != nil {
+			logger.GetLogger().Info(
+				"Recv CreateUsers",
+				slog.String("Error", err.Error()),
+			)
+
+			return status.Error(codes.Internal, errors.GetMessage(errors.ErrCodeInternalServerError))
+		}
+		if err := s.helpers.UserHelper.CreateUser(stream.Context(), &model.RegisterRequest{
+			PhoneNumber: user.PhoneNumber,
+			Email:       user.Email,
+			Password:    user.GetPassword(),
+		}); err != nil {
+			return status.Error(codes.Internal, err.Error())
+		}
+
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +131,8 @@ func (s *userServiceServer) buildFilter(data *GetUserRequest) (*repository.FindU
 				slog.String("ID", data.GetId()),
 				slog.String("Error", err.Error()),
 			)
+
+			return nil, err
 		}
 
 		filter.ID = &id

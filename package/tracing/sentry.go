@@ -35,7 +35,11 @@ func (p *SentryPlugin) Initialize(db *gorm.DB) error {
 }
 
 func (p *SentryPlugin) startSpan(db *gorm.DB) {
-	transaction := db.Statement.Context.Value("sentry_transaction").(*sentry.Span)
+	transaction, ok := db.Statement.Context.Value("sentry_transaction").(*sentry.Span)
+	if !ok {
+		return
+	}
+
 	span := sentry.StartSpan(transaction.Context(), "db.query")
 	span.Data = map[string]interface{}{
 		"sql":          db.Statement.SQL.String(),

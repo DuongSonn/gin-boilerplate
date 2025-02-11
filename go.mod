@@ -5,15 +5,13 @@ go 1.21
 toolchain go1.22.4
 
 require (
+	github.com/getsentry/sentry-go v0.31.1
+	github.com/getsentry/sentry-go/gin v0.31.1
 	github.com/google/uuid v1.6.0
 	google.golang.org/grpc v1.65.0
 )
 
-require (
-	github.com/getsentry/sentry-go v0.31.1 // indirect
-	github.com/getsentry/sentry-go/gin v0.31.1 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
-)
+require google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 
 require (
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
@@ -53,7 +51,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect

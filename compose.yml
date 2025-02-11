@@ -1,40 +1,40 @@
 version: "3.8"
 services:
-  postgres:
-    image: postgres
-    environment:
-      POSTGRES_PASSWORD: 123456
-    volumes:
-      - ./volumes/posgres:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-  phpmyadmin:
-    image: dpage/pgadmin4
-    depends_on:
-      - postgres
-    ports:
-      - "9000:80"
-    environment:
-      PGADMIN_DEFAULT_PASSWORD: 123456
-      PGADMIN_DEFAULT_EMAIL: root@gmail.com
-  redis:
-    image: redis
-    ports:
-      - "6380:6379"
-  kafka:
-    image: bitnami/kafka
-    volumes:
-      - ./volumes/kafka:/bitnami/kafka
-    networks:
-      - local-app
-    environment:
-      - KAFKA_CFG_NODE_ID=0
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    # postgres:
+    #   image: postgres
+    #   environment:
+    #     POSTGRES_PASSWORD: 123456
+    #   volumes:
+    #     - ./volumes/posgres:/var/lib/postgresql/data
+    #   ports:
+    #     - "5432:5432"
+    # phpmyadmin:
+    #   image: dpage/pgadmin4
+    #   depends_on:
+    #     - postgres
+    #   ports:
+    #     - "9000:80"
+    #   environment:
+    #     PGADMIN_DEFAULT_PASSWORD: 123456
+    #     PGADMIN_DEFAULT_EMAIL: root@gmail.com
+    redis:
+        image: redis
+        ports:
+            - "6380:6379"
+    kafka:
+        image: bitnami/kafka
+        volumes:
+            - ./volumes/kafka:/bitnami/kafka
+        networks:
+            - local-app
+        environment:
+            - KAFKA_CFG_NODE_ID=0
+            - KAFKA_CFG_PROCESS_ROLES=controller,broker
+            - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+            - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+            - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+            - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
 
 networks:
-  local-app:
-    driver: bridge
+    local-app:
+        driver: bridge

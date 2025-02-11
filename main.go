@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"oauth-server/app/controller"
 	"oauth-server/app/helper"
 	postgres_repository "oauth-server/app/repository/postgres"
 	"oauth-server/app/service"
 	"oauth-server/config"
+	"oauth-server/external/user"
 	"oauth-server/package/database"
 	logger "oauth-server/package/log"
 	_validator "oauth-server/package/validator"
@@ -24,6 +26,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -37,6 +40,7 @@ func main() {
 	// Register Others
 	helpers := helper.RegisterHelpers(postgresRepo)
 	services := service.RegisterServices(helpers, postgresRepo)
+	go newGRPCServer(postgresRepo, helpers)
 
 	// Run gin server
 	gin.SetMode(conf.Server.Mode)
@@ -111,5 +115,22 @@ func init() {
 		TracesSampleRate: 1.0,
 	}); err != nil {
 		log.Panicf("Sentry initialization failed: %v\n", err)
+	}
+}
+
+func newGRPCServer(postgresRepo postgres_repository.PostgresRepositoryCollections, helpers helper.HelperCollections) {
+	conf := config.GetConfiguration().GRPC
+
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", conf.Port))
+	if err != nil {
+		log.Panicf("GRPC Failed to listen: %v", err)
+	}
+
+	opts := []grpc.ServerOption{}
+	grpcServer := grpc.NewServer(opts...)
+	user.RegisterUserServiceServer(grpcServer, user.NewUserServiceServer(postgresRepo, helpers))
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Panicf("GRPC Failed to serve: %v", err)
 	}
 }
