@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option go_package = "oauth-server/external/user";
+
+package user;
+
+service UserService {
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+    rpc GetUsers(GetUserRequest) returns (stream GetUserResponse);
+    rpc CreateUsers(stream CreateUserRequest) returns (CreateUserResponse);
+}
+
+// GetUser Message
+message GetUserRequest {
+    optional string id = 1;
+    optional string phone_number = 2;
+    optional string email = 3;
+    optional bool is_active = 4;
+
+    optional int32 limit = 5;
+    optional int32 offset = 6;
+}
+message GetUserResponse {
+    bool success = 1;
+    User user = 2;
+}
+
+// CreateUsers Message
+message CreateUserRequest {
+    optional string phone_number = 1;
+    optional string email = 2;
+    string password = 3;
+}
+message CreateUserResponse {
+    bool success = 1;
+}
+
+// Common Message
+message User {
+    string id = 1;
+    string phone_number = 2;
+    string email = 3;
+    bool is_active = 4;
+}

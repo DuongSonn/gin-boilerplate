@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	logger "oauth-server/package/log"
 	_validator "oauth-server/package/validator"
 )
 
@@ -77,7 +76,7 @@ var messages = map[int]map[string]string{
 func New(code int) *CustomError {
 	return &CustomError{
 		Code:    code,
-		Message: messages[code][LangVN],
+		Message: GetMessage(code),
 	}
 }
 
@@ -107,6 +106,15 @@ func NewValidatorError(err error) *CustomError {
 	return New(ErrCodeInternalServerError)
 }
 
+func GetMessage(code int) string {
+	msg, ok := messages[code][LangVN]
+	if !ok {
+		return messages[ErrCodeInternalServerError][LangVN]
+	}
+
+	return msg
+}
+
 func (err *CustomError) Error() string {
 	return err.Message
 }
@@ -117,7 +125,6 @@ func (err *CustomError) GetCode() int {
 
 // --------------------------------------
 func convertValidatorTag(tag string) int {
-	logger.GetLogger().Info("validation_tag: ", tag)
 	switch tag {
 	case _validator.EMAIL, _validator.PHONE_NUMBER:
 		return ErrCodeValidatorFormat

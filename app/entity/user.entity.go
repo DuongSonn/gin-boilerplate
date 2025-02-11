@@ -46,3 +46,15 @@ func (u *User) BeforeSave(tx *gorm.DB) error {
 
 	return nil
 }
+
+func (u *User) GetUserID() string {
+	return u.ID.String()
+}
+
+func (u *User) GetPhoneNumber() string {
+	return *u.PhoneNumber
+}
+
+func (u *User) GetEmail() string {
+	return *u.Email
+}
