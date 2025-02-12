@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"oauth-server/app/entity"
 	"oauth-server/config"
+	_jwt "oauth-server/package/jwt"
 	logger "oauth-server/package/log"
 	"oauth-server/utils"
 )
@@ -18,10 +19,10 @@ func NewOauthHelper() OauthHelper {
 func (h *oauthHelper) GenerateAccessToken(user entity.User) (string, error) {
 	conf := config.GetConfiguration().Jwt
 
-	payload := &utils.UserPayload{
+	payload := &_jwt.UserPayload{
 		ID: user.ID,
 	}
-	accessToken, err := utils.GenerateToken(payload, conf.UserAccessTokenKey, utils.USER_ACCESS_TOKEN_IAT)
+	accessToken, err := _jwt.GenerateToken(payload, conf.UserAccessTokenKey, utils.USER_ACCESS_TOKEN_IAT)
 	if err != nil {
 		logger.GetLogger().Info(
 			"GenerateAccessToken",
@@ -41,10 +42,10 @@ func (h *oauthHelper) GenerateAccessToken(user entity.User) (string, error) {
 func (h *oauthHelper) GenerateRefreshToken(user entity.User) (string, error) {
 	conf := config.GetConfiguration().Jwt
 
-	payload := &utils.UserPayload{
+	payload := &_jwt.UserPayload{
 		ID: user.ID,
 	}
-	refreshToken, err := utils.GenerateToken(payload, conf.UserRefreshTokenKey, utils.USER_REFRESH_TOKEN_IAT)
+	refreshToken, err := _jwt.GenerateToken(payload, conf.UserRefreshTokenKey, utils.USER_REFRESH_TOKEN_IAT)
 	if err != nil {
 		logger.GetLogger().Info(
 			"GenerateRefreshToken",

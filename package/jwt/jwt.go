@@ -1,4 +1,4 @@
-package utils
+package _jwt
 
 import (
 	"oauth-server/config"
@@ -8,8 +8,43 @@ import (
 	"github.com/google/uuid"
 )
 
+type RPCPayload struct {
+	UserID uuid.UUID `json:"user_id"`
+	Scope  string    `json:"scopes"`
+	jwt.RegisteredClaims
+}
 type UserPayload struct {
 	ID uuid.UUID `json:"id"`
+}
+
+type key string
+
+const (
+	RPC_CONTEXT_KEY key = "rpc_user"
+)
+
+func ParseRPCToken(tokenStr string) (*RPCPayload, error) {
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenStr, &RPCPayload{})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*RPCPayload); ok {
+		return claims, nil
+	}
+
+	return nil, jwt.ErrTokenMalformed
+}
+
+func GenerateRPCToken(payload RPCPayload) (string, error) {
+	conf := config.GetConfiguration().Jwt
+
+	accessToken, err := GenerateToken(payload, conf.UserAccessTokenKey, 24*60*60)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
 }
 
 /*

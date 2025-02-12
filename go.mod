@@ -1,6 +1,6 @@
 module oauth-server
 
-go 1.21
+go 1.22
 
 toolchain go1.22.4
 
@@ -8,10 +8,10 @@ require (
 	github.com/getsentry/sentry-go v0.31.1
 	github.com/getsentry/sentry-go/gin v0.31.1
 	github.com/google/uuid v1.6.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.70.0
 )
 
-require google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
+require google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 
 require (
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
@@ -66,7 +66,7 @@ require (
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.35.2
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.6
