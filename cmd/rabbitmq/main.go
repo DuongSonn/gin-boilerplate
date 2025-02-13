@@ -20,6 +20,7 @@ func init() {
 
 func main() {
 	rabbitmqType := flag.String("type", "client", "client or server")
+	serverType := flag.String("server", "normal", "normal or rpc")
 	flag.Parse()
 
 	if *rabbitmqType != "client" && *rabbitmqType != "server" {
@@ -27,15 +28,40 @@ func main() {
 		return
 	}
 
-	if *rabbitmqType == "client" {
-		queue.SendDirectRabbitMQ(queue.RabbitMQQueue{
-			QueueName: "HelloWorldQueue",
-			Exchange:  "HelloWorldExchange",
-		}, "Hello World 1")
-	} else if *rabbitmqType == "server" {
-		queue.ReceiveDirectRabbitMQ(queue.RabbitMQQueue{
-			QueueName: "HelloWorldQueue",
-			Exchange:  "HelloWorldExchange",
-		})
+	if *serverType != "normal" && *serverType != "rpc" {
+		logger.GetLogger().Info("Invalid server type", slog.String("type", *serverType))
+		return
 	}
+
+	switch *serverType {
+	case "normal":
+		if *rabbitmqType == "client" {
+			queue.SendDirectRabbitMQ(queue.RabbitMQQueue{
+				QueueName: "HelloWorldQueue",
+				Exchange:  "HelloWorldExchange",
+			}, "Hello World 1")
+		} else if *rabbitmqType == "server" {
+			queue.ReceiveDirectRabbitMQ(queue.RabbitMQQueue{
+				QueueName: "HelloWorldQueue",
+				Exchange:  "HelloWorldExchange",
+			})
+		}
+	case "rpc":
+		if *rabbitmqType == "client" {
+			queue.SendRPCRabbitMQ(queue.RabbitMQQueue{
+				QueueName:  "RPCQueue",
+				Exchange:   "RPCExchange",
+				RoutingKey: "RPCRoutingKey",
+				Consumer:   "RPCConsumer",
+			})
+		} else if *rabbitmqType == "server" {
+			queue.ReceiveRPCRabbitMQ(queue.RabbitMQQueue{
+				QueueName:  "RPCQueue",
+				Exchange:   "RPCExchange",
+				RoutingKey: "RPCRoutingKey",
+				Consumer:   "RPCConsumer",
+			})
+		}
+	}
+
 }

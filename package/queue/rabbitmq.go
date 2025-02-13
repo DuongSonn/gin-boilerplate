@@ -21,6 +21,7 @@ type RabbitMQQueue struct {
 	QueueName  string
 	Exchange   string
 	RoutingKey string
+	Consumer   string
 }
 
 func connectRabbitMQ() (*amqp.Channel, error) {
@@ -48,28 +49,41 @@ func SendRPCRabbitMQ(queueConf RabbitMQQueue) {
 	defer ch.Close()
 
 	// Declare queue
-	q, err := ch.QueueDeclare(
+	if _, err := ch.QueueDeclare(
 		queueConf.QueueName, // name
 		false,               // durable
 		false,               // delete when unused
 		true,                // exclusive
 		false,               // noWait
 		nil,                 // arguments
-	)
-	if err != nil {
+	); err != nil {
 		logger.GetLogger().Info("QueueDeclare RabbitMQ", slog.String("error", err.Error()))
+		return
+	}
+
+	// Declare exchange
+	if err := ch.ExchangeDeclare(
+		queueConf.Exchange, // name
+		"fanout",           // type
+		true,               // durable
+		false,              // auto-deleted
+		false,              // internal
+		false,              // no-wait
+		nil,                // arguments
+	); err != nil {
+		logger.GetLogger().Info("ExchangeDeclare RabbitMQ", slog.String("error", err.Error()))
 		return
 	}
 
 	// Declare consumer
 	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		queueConf.QueueName, // queue
+		queueConf.Consumer,  // consumer
+		true,                // auto-ack
+		false,               // exclusive
+		false,               // no-local
+		false,               // no-wait
+		nil,                 // args
 	)
 	if err != nil {
 		logger.GetLogger().Info("Consume RabbitMQ", slog.String("error", err.Error()))
@@ -77,25 +91,24 @@ func SendRPCRabbitMQ(queueConf RabbitMQQueue) {
 	}
 
 	ID := utils.GenerateUUID().String()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer func() {
 		fmt.Println(" [x] Done")
 		cancel()
 	}()
 
-	err = ch.PublishWithContext(ctx,
-		"",          // exchange
-		"rpc_queue", // routing key
-		false,       // mandatory
-		false,       // immediate
+	if err = ch.PublishWithContext(ctx,
+		queueConf.Exchange, // exchange
+		"",                 // routing key
+		false,              // mandatory
+		false,              // immediate
 		amqp.Publishing{
 			ContentType:   "text/plain",
 			CorrelationId: ID,
-			ReplyTo:       q.Name,
-			Body:          []byte("test"),
-		})
-	if err != nil {
+			ReplyTo:       queueConf.QueueName,
+			Body:          []byte("Test RPC"),
+		},
+	); err != nil {
 		logger.GetLogger().Info("PublishWithContext RabbitMQ", slog.String("error", err.Error()))
 		return
 	}
@@ -103,6 +116,7 @@ func SendRPCRabbitMQ(queueConf RabbitMQQueue) {
 	for d := range msgs {
 		if ID == d.CorrelationId {
 			fmt.Println(" [x] Received ", string(d.Body))
+			d.Ack(false)
 			break
 		}
 	}
@@ -115,6 +129,89 @@ func ReceiveRPCRabbitMQ(queueConf RabbitMQQueue) {
 		return
 	}
 	defer ch.Close()
+
+	// Declare queue
+	if _, err := ch.QueueDeclare(
+		queueConf.QueueName, // name
+		false,               // durable
+		false,               // delete when unused
+		false,               // exclusive
+		false,               // no-wait
+		nil,                 // arguments
+	); err != nil {
+		logger.GetLogger().Info("QueueDeclare RabbitMQ", slog.String("error", err.Error()))
+		return
+	}
+
+	// Declare exchange
+	if err = ch.ExchangeDeclare(
+		queueConf.Exchange, // name
+		"fanout",           // type
+		true,               // durable
+		false,              // auto-deleted
+		false,              // internal
+		false,              // no-wait
+		nil,                // arguments
+	); err != nil {
+		logger.GetLogger().Info("ExchangeDeclare RabbitMQ", slog.String("error", err.Error()))
+		return
+	}
+
+	// Bind queue to exchange
+	if err = ch.QueueBind(
+		queueConf.QueueName,  // queue name
+		queueConf.RoutingKey, // routing key
+		queueConf.Exchange,   // exchange
+		false,
+		nil,
+	); err != nil {
+		logger.GetLogger().Info("QueueBind RabbitMQ", slog.String("error", err.Error()))
+		return
+	}
+
+	// Declare consumer
+	msgs, err := ch.Consume(
+		queueConf.QueueName, // queue
+		queueConf.Consumer,  // consumer
+		false,               // auto-ack
+		false,               // exclusive
+		false,               // no-local
+		false,               // no-wait
+		nil,                 // args
+	)
+	if err != nil {
+		logger.GetLogger().Info("Consume RabbitMQ", slog.String("error", err.Error()))
+		return
+	}
+
+	var forever chan struct{}
+
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		for d := range msgs {
+			log.Printf(" [x] %s", d.Body)
+
+			if err := ch.PublishWithContext(ctx,
+				queueConf.Exchange, // exchange
+				d.ReplyTo,          // routing key
+				false,              // mandatory
+				false,              // immediate
+				amqp.Publishing{
+					ContentType:   "text/plain",
+					CorrelationId: d.CorrelationId,
+					Body:          []byte("Response RPC Test"),
+				},
+			); err != nil {
+				logger.GetLogger().Info("PublishWithContext RabbitMQ", slog.String("error", err.Error()))
+			}
+
+			d.Ack(false)
+		}
+	}()
+
+	log.Printf(" [*] Awaiting RPC requests")
+	<-forever
 }
 
 func SendDirectRabbitMQ(queueConf RabbitMQQueue, message string) {
@@ -182,21 +279,21 @@ func ReceiveDirectRabbitMQ(queueConf RabbitMQQueue) {
 	defer ch.Close()
 
 	// Declare queue
-	q, err := ch.QueueDeclare(
+
+	if _, err := ch.QueueDeclare(
 		queueConf.QueueName, // name
 		false,               // durable
 		false,               // delete when unused
 		false,               // exclusive
 		false,               // no-wait
 		nil,                 // arguments
-	)
-	if err != nil {
+	); err != nil {
 		logger.GetLogger().Info("QueueDeclare RabbitMQ", slog.String("error", err.Error()))
 		return
 	}
 
 	// Declare exchange
-	err = ch.ExchangeDeclare(
+	if err = ch.ExchangeDeclare(
 		queueConf.Exchange, // name
 		"direct",           // type
 		true,               // durable
@@ -204,32 +301,33 @@ func ReceiveDirectRabbitMQ(queueConf RabbitMQQueue) {
 		false,              // internal
 		false,              // no-wait
 		nil,                // arguments
-	)
-	if err != nil {
+	); err != nil {
 		logger.GetLogger().Info("ExchangeDeclare RabbitMQ", slog.String("error", err.Error()))
 		return
 	}
 
 	// Bind queue to exchange
-	err = ch.QueueBind(
+
+	if err = ch.QueueBind(
 		queueConf.QueueName,  // queue name
 		queueConf.RoutingKey, // routing key
 		queueConf.Exchange,   // exchange
 		false,
-		nil)
-	if err != nil {
+		nil,
+	); err != nil {
 		logger.GetLogger().Info("QueueBind RabbitMQ", slog.String("error", err.Error()))
 		return
 	}
 
+	// Declare consumer
 	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		queueConf.QueueName, // queue
+		"",                  // consumer
+		true,                // auto-ack
+		false,               // exclusive
+		false,               // no-local
+		false,               // no-wait
+		nil,                 // args
 	)
 	if err != nil {
 		logger.GetLogger().Info("Consume RabbitMQ", slog.String("error", err.Error()))
