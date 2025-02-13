@@ -14,6 +14,7 @@ type Configuration struct {
 	Server     Server           `mapstructure:"server"`
 	Jwt        JWT              `mapstructure:"jwt"`
 	GRPC       GRPC             `mapstructure:"grpc"`
+	RabbitMQ   RabbitMQ         `mapstructure:"rabbitmq"`
 }
 
 func Init(filePath string) {

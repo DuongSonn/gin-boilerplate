@@ -1,3 +1,3 @@
-package message_broker
+package queue
 
 func InitKafka() {}

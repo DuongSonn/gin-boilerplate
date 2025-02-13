@@ -97,7 +97,7 @@ func main() {
 	log.Println("Shutdown Server ...")
 	grpcServer.Stop()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server Shutdown:", err)
@@ -106,7 +106,7 @@ func main() {
 	// catching ctx.Done(). timeout of 5 seconds.
 	select {
 	case <-ctx.Done():
-		log.Println("timeout of 5 seconds.")
+		log.Println("timeout of 3 seconds.")
 	}
 	log.Println("Server exiting")
 }

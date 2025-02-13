@@ -11,6 +11,7 @@ import (
 	"oauth-server/package/database"
 	"oauth-server/package/errors"
 	logger "oauth-server/package/log"
+	"oauth-server/package/queue"
 	"oauth-server/utils"
 	"time"
 
@@ -105,6 +106,7 @@ func (s *userService) Register(ctx context.Context, data *model.RegisterRequest)
 	if err := s.helpers.UserHelper.CreateUser(ctx, data); err != nil {
 		return nil, err
 	}
+	go queue.RequestRPCRabbitMQ(queue.RABBIT_MQ_QUEUE_REGISTER)
 
 	return &model.RegisterResponse{}, nil
 }
