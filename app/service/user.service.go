@@ -106,7 +106,20 @@ func (s *userService) Register(ctx context.Context, data *model.RegisterRequest)
 	if err := s.helpers.UserHelper.CreateUser(ctx, data); err != nil {
 		return nil, err
 	}
-	go queue.RequestRPCRabbitMQ(queue.RABBIT_MQ_QUEUE_REGISTER)
+	go queue.SendRPCRabbitMQ(queue.RabbitMQRPCQueue{
+		Client: queue.RabbitMQQueue{
+			QueueName:  "RPCClientQueue",
+			Exchange:   "RPCClientExchange",
+			RoutingKey: "RPCClientRoutingKey",
+			Consumer:   "RPCClientConsumer",
+		},
+		Server: queue.RabbitMQQueue{
+			QueueName:  "RPCServerQueue",
+			Exchange:   "RPCServerExchange",
+			RoutingKey: "RPCServerRoutingKey",
+			Consumer:   "RPCServerConsumer",
+		},
+	})
 
 	return &model.RegisterResponse{}, nil
 }

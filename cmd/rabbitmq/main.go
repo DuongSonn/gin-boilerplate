@@ -48,18 +48,34 @@ func main() {
 		}
 	case "rpc":
 		if *rabbitmqType == "client" {
-			queue.SendRPCRabbitMQ(queue.RabbitMQQueue{
-				QueueName:  "RPCQueue",
-				Exchange:   "RPCExchange",
-				RoutingKey: "RPCRoutingKey",
-				Consumer:   "RPCConsumer",
+			queue.SendRPCRabbitMQ(queue.RabbitMQRPCQueue{
+				Client: queue.RabbitMQQueue{
+					QueueName:  "RPCClientQueue",
+					Exchange:   "RPCExchange",
+					RoutingKey: "RPCRoutingKey",
+					Consumer:   "RPCClientConsumer",
+				},
+				Server: queue.RabbitMQQueue{
+					QueueName:  "RPCServerQueue",
+					Exchange:   "RPCExchange",
+					RoutingKey: "RPCRoutingKey",
+					Consumer:   "RPCServerConsumer",
+				},
 			})
 		} else if *rabbitmqType == "server" {
-			queue.ReceiveRPCRabbitMQ(queue.RabbitMQQueue{
-				QueueName:  "RPCQueue",
-				Exchange:   "RPCExchange",
-				RoutingKey: "RPCRoutingKey",
-				Consumer:   "RPCConsumer",
+			queue.ReceiveRPCRabbitMQ(queue.RabbitMQRPCQueue{
+				Client: queue.RabbitMQQueue{
+					QueueName:  "RPCClientQueue",
+					Exchange:   "RPCClientExchange",
+					RoutingKey: "RPCClientRoutingKey",
+					Consumer:   "RPCClientConsumer",
+				},
+				Server: queue.RabbitMQQueue{
+					QueueName:  "RPCServerQueue",
+					Exchange:   "RPCServerExchange",
+					RoutingKey: "RPCServerRoutingKey",
+					Consumer:   "RPCServerConsumer",
+				},
 			})
 		}
 	}
