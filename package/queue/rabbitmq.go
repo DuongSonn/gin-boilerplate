@@ -13,8 +13,14 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-const (
+var (
 	RABBIT_MQ_QUEUE_REGISTER = "register"
+	CLIENT_EXCHANGE          = map[string]rabbitMQExchange{
+		"RPCClientRoutingKey": {
+			Exchange:   "RPCClientExchange",
+			RoutingKey: "RPCClientRoutingKey",
+		},
+	}
 )
 
 type RabbitMQQueue struct {
@@ -33,6 +39,10 @@ type rabbitMQConnect struct {
 	ch   *amqp.Channel
 	conn *amqp.Connection
 }
+type rabbitMQExchange struct {
+	Exchange   string
+	RoutingKey string
+}
 
 func connectRabbitMQ() (*rabbitMQConnect, error) {
 	conf := config.GetConfiguration().RabbitMQ
@@ -48,6 +58,14 @@ func connectRabbitMQ() (*rabbitMQConnect, error) {
 	}
 
 	return &rabbitMQConnect{ch, conn}, nil
+}
+
+func getExchangeName(routingKey string) string {
+	if exchange, ok := CLIENT_EXCHANGE[routingKey]; ok {
+		return exchange.Exchange
+	}
+
+	return ""
 }
 
 func SendRPCRabbitMQ(queueConf RabbitMQRPCQueue) {
@@ -128,7 +146,7 @@ func SendRPCRabbitMQ(queueConf RabbitMQRPCQueue) {
 	}
 
 	ID := utils.GenerateUUID().String()
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err = ch.PublishWithContext(ctx,
@@ -198,17 +216,20 @@ func ReceiveRPCRabbitMQ(queueConf RabbitMQRPCQueue) {
 		logger.GetLogger().Info("ExchangeDeclare Sever", slog.String("error", err.Error()))
 		return
 	}
-	if err = ch.ExchangeDeclare(
-		queueConf.Client.Exchange, // name
-		"direct",                  // type
-		true,                      // durable
-		false,                     // auto-deleted
-		false,                     // internal
-		false,                     // no-wait
-		nil,                       // arguments
-	); err != nil {
-		logger.GetLogger().Info("ExchangeDeclare Client", slog.String("error", err.Error()))
-		return
+	// Declare client exchange
+	for _, exchange := range CLIENT_EXCHANGE {
+		if err = ch.ExchangeDeclare(
+			exchange.Exchange, // name
+			"direct",          // type
+			true,              // durable
+			false,             // auto-deleted
+			false,             // internal
+			false,             // no-wait
+			nil,               // arguments
+		); err != nil {
+			logger.GetLogger().Info("ExchangeDeclare Client", slog.String("error", err.Error()))
+			return
+		}
 	}
 
 	// Bind server queue to server exchange
@@ -245,12 +266,14 @@ func ReceiveRPCRabbitMQ(queueConf RabbitMQRPCQueue) {
 		defer cancel()
 		for d := range msgs {
 			log.Printf(" [x] %s", d.Body)
+			routingKey := d.ReplyTo
+			exchange := getExchangeName(routingKey)
 
 			if err := ch.PublishWithContext(ctx,
-				queueConf.Client.Exchange, // exchange
-				d.ReplyTo,                 // routing key
-				false,                     // mandatory
-				false,                     // immediate
+				exchange,   // exchange
+				routingKey, // routing key
+				false,      // mandatory
+				false,      // immediate
 				amqp.Publishing{
 					ContentType:   "text/plain",
 					CorrelationId: d.CorrelationId,

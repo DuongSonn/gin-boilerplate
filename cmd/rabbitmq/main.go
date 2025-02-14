@@ -51,14 +51,14 @@ func main() {
 			queue.SendRPCRabbitMQ(queue.RabbitMQRPCQueue{
 				Client: queue.RabbitMQQueue{
 					QueueName:  "RPCClientQueue",
-					Exchange:   "RPCExchange",
-					RoutingKey: "RPCRoutingKey",
+					Exchange:   "RPCClientExchange",
+					RoutingKey: "RPCClientRoutingKey",
 					Consumer:   "RPCClientConsumer",
 				},
 				Server: queue.RabbitMQQueue{
 					QueueName:  "RPCServerQueue",
-					Exchange:   "RPCExchange",
-					RoutingKey: "RPCRoutingKey",
+					Exchange:   "RPCServerExchange",
+					RoutingKey: "RPCServerRoutingKey",
 					Consumer:   "RPCServerConsumer",
 				},
 			})
