@@ -1,3 +1,3 @@
 package queue
 
-func InitKafka() {}
+func connectKafka() {}

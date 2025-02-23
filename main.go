@@ -35,8 +35,7 @@ func main() {
 
 	// Register repositories
 	postgresDB := database.GetPostgres()
-	// mysqlRepo := mysql_repository.RegisterMysqlRepositories(db)
-	postgresRepo := postgres_repository.RegisterPostgresRepositories(postgresDB)
+	postgresRepo := postgres_repository.Init(postgresDB)
 	mws := middleware.RegisterMiddleware()
 
 	// Register Others

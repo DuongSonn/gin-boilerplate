@@ -7,7 +7,6 @@ import (
 	"oauth-server/app/helper"
 	"oauth-server/app/model"
 	"oauth-server/app/repository"
-	postgres_repository "oauth-server/app/repository/postgres"
 	"oauth-server/package/errors"
 	logger "oauth-server/package/log"
 	"time"
@@ -18,14 +17,14 @@ import (
 )
 
 type userServiceServer struct {
-	postgresRepo postgres_repository.PostgresRepositoryCollections
+	postgresRepo repository.RepositoryCollections
 	helpers      helper.HelperCollections
 
 	UnimplementedUserServiceServer
 }
 
 func NewUserServiceServer(
-	postgresRepo postgres_repository.PostgresRepositoryCollections,
+	postgresRepo repository.RepositoryCollections,
 	helpers helper.HelperCollections,
 ) UserServiceServer {
 	return &userServiceServer{
@@ -40,7 +39,7 @@ func (s *userServiceServer) GetUser(ctx context.Context, data *GetUserRequest) (
 		return nil, status.Error(codes.Internal, errors.GetMessage(errors.ErrCodeInternalServerError))
 	}
 
-	user, err := s.postgresRepo.PostgresUserRepo.FindUserByFilter(ctx, nil, filter)
+	user, err := s.postgresRepo.UserRepo.FindOneByFilter(ctx, nil, filter)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, errors.GetMessage(errors.ErrCodeUserNotFound))
 	}
@@ -65,7 +64,7 @@ func (s *userServiceServer) GetUsers(data *GetUserRequest, stream UserService_Ge
 		return status.Error(codes.Internal, errors.GetMessage(errors.ErrCodeInternalServerError))
 	}
 
-	users, err := s.postgresRepo.PostgresUserRepo.FindUsersByFilter(ctx, nil, filter)
+	users, err := s.postgresRepo.UserRepo.FindManyByFilter(ctx, nil, filter)
 	if err != nil {
 		return status.Error(codes.NotFound, errors.GetMessage(errors.ErrCodeUserNotFound))
 	}

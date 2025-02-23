@@ -1,7 +1,7 @@
 package helper
 
 import (
-	postgres_repository "oauth-server/app/repository/postgres"
+	"oauth-server/app/repository"
 )
 
 type HelperCollections struct {
@@ -10,10 +10,10 @@ type HelperCollections struct {
 }
 
 func RegisterHelpers(
-	postgresRepo postgres_repository.PostgresRepositoryCollections,
+	postgresRepo repository.RepositoryCollections,
 ) HelperCollections {
 	return HelperCollections{
-		OauthHelper: NewOauthHelper(),
-		UserHelper:  NewUserHelper(postgresRepo),
+		OauthHelper: newOauthHelper(),
+		UserHelper:  newUserHelper(postgresRepo),
 	}
 }

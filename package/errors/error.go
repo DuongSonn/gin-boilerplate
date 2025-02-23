@@ -3,9 +3,11 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/go-playground/validator/v10"
 
+	logger "oauth-server/package/log"
 	_validator "oauth-server/package/validator"
 )
 
@@ -92,6 +94,7 @@ func NewCustomError(code int, message string) *CustomError {
 }
 
 func NewValidatorError(err error) *CustomError {
+	logger.GetLogger().Info("Validator Error", slog.String("error", err.Error()))
 	var validatorErr validator.ValidationErrors
 	if errors.As(err, &validatorErr) {
 		errDetail := validatorErr[0]

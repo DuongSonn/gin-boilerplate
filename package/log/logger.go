@@ -28,3 +28,7 @@ func Init() {
 func GetLogger() *slog.Logger {
 	return logger
 }
+
+func SetLogger(l *slog.Logger) {
+	logger = l
+}

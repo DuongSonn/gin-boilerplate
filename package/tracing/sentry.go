@@ -41,18 +41,25 @@ func (p *SentryPlugin) startSpan(db *gorm.DB) {
 	}
 
 	span := sentry.StartSpan(transaction.Context(), "db.query")
+	db.InstanceSet("sentry:span", span)
+}
+
+func (p *SentryPlugin) endSpan(db *gorm.DB) {
+	instance, ok := db.InstanceGet("sentry:span")
+	if !ok {
+		return
+	}
+
+	span, ok := instance.(*sentry.Span)
+	if !ok {
+		return
+	}
+
 	span.Data = map[string]interface{}{
 		"sql":          db.Statement.SQL.String(),
 		"table":        db.Statement.Table,
 		"rowsAffected": db.Statement.RowsAffected,
 	}
-	db.InstanceSet("sentry:span", span)
-}
+	span.Finish()
 
-func (p *SentryPlugin) endSpan(db *gorm.DB) {
-	if v, ok := db.InstanceGet("sentry:span"); ok {
-		if span, ok := v.(*sentry.Span); ok {
-			span.Finish()
-		}
-	}
 }

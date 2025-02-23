@@ -2,7 +2,7 @@ package service
 
 import (
 	"oauth-server/app/helper"
-	postgres_repository "oauth-server/app/repository/postgres"
+	"oauth-server/app/repository"
 )
 
 type ServiceCollections struct {
@@ -13,7 +13,7 @@ type ServiceCollections struct {
 func RegisterServices(
 	helpers helper.HelperCollections,
 
-	postgresRepo postgres_repository.PostgresRepositoryCollections,
+	postgresRepo repository.RepositoryCollections,
 ) ServiceCollections {
 	userSvc := NewUserService(helpers, postgresRepo)
 	oauthSvc := NewOAuthService(helpers, postgresRepo)

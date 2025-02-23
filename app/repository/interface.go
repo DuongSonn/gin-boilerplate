@@ -7,17 +7,21 @@ import (
 	"gorm.io/gorm"
 )
 
+type RepositoryCollections struct {
+	UserRepo  UserRepository
+	OAuthRepo OAuthRepository
+}
 type UserRepository interface {
-	CreateUser(ctx context.Context, tx *gorm.DB, user *entity.User) error
-	UpdateUser(ctx context.Context, tx *gorm.DB, user *entity.User) error
-	DeleteUser(ctx context.Context, tx *gorm.DB, user *entity.User) error
-	BulkCreateUser(ctx context.Context, tx *gorm.DB, users []entity.User) error
-	FindUserByFilter(ctx context.Context, tx *gorm.DB, filter *FindUserByFilter) (*entity.User, error)
-	FindUsersByFilter(ctx context.Context, tx *gorm.DB, filer *FindUserByFilter) ([]entity.User, error)
+	Create(ctx context.Context, tx *gorm.DB, user *entity.User) error
+	Update(ctx context.Context, tx *gorm.DB, user *entity.User) error
+	Delete(ctx context.Context, tx *gorm.DB, user *entity.User) error
+	BulkCreate(ctx context.Context, tx *gorm.DB, users []entity.User) error
+	FindOneByFilter(ctx context.Context, tx *gorm.DB, filter *FindUserByFilter) (*entity.User, error)
+	FindManyByFilter(ctx context.Context, tx *gorm.DB, filer *FindUserByFilter) ([]entity.User, error)
 }
 
 type OAuthRepository interface {
-	CreateOAuth(ctx context.Context, tx *gorm.DB, oauth *entity.Oauth) error
-	UpdateOAuth(ctx context.Context, tx *gorm.DB, oauth *entity.Oauth) error
-	FindOAuthByFilter(ctx context.Context, tx *gorm.DB, filter *FindOAuthByFilter) (*entity.Oauth, error)
+	Create(ctx context.Context, tx *gorm.DB, oauth *entity.Oauth) error
+	Update(ctx context.Context, tx *gorm.DB, oauth *entity.Oauth) error
+	FindOneByFilter(ctx context.Context, tx *gorm.DB, filter *FindOAuthByFilter) (*entity.Oauth, error)
 }

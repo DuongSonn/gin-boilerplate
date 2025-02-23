@@ -12,7 +12,7 @@ import (
 type oauthHelper struct {
 }
 
-func NewOauthHelper() OauthHelper {
+func newOauthHelper() OauthHelper {
 	return &oauthHelper{}
 }
 

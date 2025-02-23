@@ -6,17 +6,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type PostgresRepositoryCollections struct {
-	PostgresUserRepo  repository.UserRepository
-	PostgresOAuthRepo repository.OAuthRepository
-}
-
-func RegisterPostgresRepositories(db *gorm.DB) PostgresRepositoryCollections {
+func Init(db *gorm.DB) repository.RepositoryCollections {
 	postgresUserRepo := NewPostgresUserRepository(db)
 	postgresOAuthRepo := NewPostgresOAuthRepository(db)
 
-	return PostgresRepositoryCollections{
-		PostgresUserRepo:  postgresUserRepo,
-		PostgresOAuthRepo: postgresOAuthRepo,
+	return repository.RepositoryCollections{
+		UserRepo:  postgresUserRepo,
+		OAuthRepo: postgresOAuthRepo,
 	}
 }

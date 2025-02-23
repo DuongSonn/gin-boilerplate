@@ -6,18 +6,16 @@ import (
 	"oauth-server/app/entity"
 	"oauth-server/app/model"
 	"oauth-server/app/repository"
-	postgres_repository "oauth-server/app/repository/postgres"
-	"oauth-server/package/database"
 	"oauth-server/package/errors"
 	logger "oauth-server/package/log"
 )
 
 type userHelper struct {
-	postgresRepo postgres_repository.PostgresRepositoryCollections
+	postgresRepo repository.RepositoryCollections
 }
 
-func NewUserHelper(
-	postgresRepo postgres_repository.PostgresRepositoryCollections,
+func newUserHelper(
+	postgresRepo repository.RepositoryCollections,
 ) UserHelper {
 	return &userHelper{
 		postgresRepo: postgresRepo,
@@ -26,13 +24,13 @@ func NewUserHelper(
 
 func (h *userHelper) CreateUser(ctx context.Context, data *model.RegisterRequest) error {
 	// Check user exited
-	existedUser, err := h.postgresRepo.PostgresUserRepo.FindUsersByFilter(ctx, nil, &repository.FindUserByFilter{
+	existedUser, err := h.postgresRepo.UserRepo.FindManyByFilter(ctx, nil, &repository.FindUserByFilter{
 		PhoneNumber: data.PhoneNumber,
 		Email:       data.Email,
 	})
 	if err != nil {
 		logger.GetLogger().Info(
-			"FindUsersByFilter",
+			"FindManyByFilter",
 			slog.Group(
 				(entity.USER_TABLE_NAME),
 				slog.String("email", *data.Email),
@@ -47,14 +45,13 @@ func (h *userHelper) CreateUser(ctx context.Context, data *model.RegisterRequest
 	}
 
 	// Create user
-	tx := database.BeginPostgresTransaction()
 	user := entity.NewUser()
 	user.PhoneNumber = data.PhoneNumber
 	user.Email = data.Email
 	user.Password = data.Password
-	if err := h.postgresRepo.PostgresUserRepo.CreateUser(ctx, tx, user); err != nil {
+	if err := h.postgresRepo.UserRepo.Create(ctx, nil, user); err != nil {
 		logger.GetLogger().Info(
-			"CreateUser",
+			"Create",
 			slog.Group(
 				(entity.USER_TABLE_NAME),
 				slog.String("email", *data.Email),
@@ -63,10 +60,8 @@ func (h *userHelper) CreateUser(ctx context.Context, data *model.RegisterRequest
 			slog.String("error", err.Error()),
 		)
 
-		tx.WithContext(ctx).Rollback()
 		return errors.New(errors.ErrCodeInternalServerError)
 	}
-	tx.WithContext(ctx).Commit()
 
 	return nil
 }

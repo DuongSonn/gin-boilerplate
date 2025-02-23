@@ -6,19 +6,18 @@ import (
 	"oauth-server/app/helper"
 	"oauth-server/app/model"
 	"oauth-server/app/repository"
-	postgres_repository "oauth-server/app/repository/postgres"
 	"oauth-server/package/errors"
 	"time"
 )
 
 type oAuthService struct {
 	helpers      helper.HelperCollections
-	postgresRepo postgres_repository.PostgresRepositoryCollections
+	postgresRepo repository.RepositoryCollections
 }
 
 func NewOAuthService(
 	helpers helper.HelperCollections,
-	postgresRepo postgres_repository.PostgresRepositoryCollections,
+	postgresRepo repository.RepositoryCollections,
 ) OAuthService {
 	return &oAuthService{
 		helpers:      helpers,
@@ -29,7 +28,7 @@ func NewOAuthService(
 func (s *oAuthService) RefreshToken(ctx context.Context, data *model.RefreshTokenRequest) (*model.RefreshTokenResponse, error) {
 
 	// Check user oauth
-	userOAuth, err := s.postgresRepo.PostgresOAuthRepo.FindOAuthByFilter(ctx, nil, &repository.FindOAuthByFilter{
+	userOAuth, err := s.postgresRepo.OAuthRepo.FindOneByFilter(ctx, nil, &repository.FindOAuthByFilter{
 		Token: &data.RefreshToken,
 	})
 
@@ -42,7 +41,7 @@ func (s *oAuthService) RefreshToken(ctx context.Context, data *model.RefreshToke
 	}
 
 	// Check user exit
-	user, err := s.postgresRepo.PostgresUserRepo.FindUserByFilter(ctx, nil, &repository.FindUserByFilter{
+	user, err := s.postgresRepo.UserRepo.FindOneByFilter(ctx, nil, &repository.FindUserByFilter{
 		ID: &userOAuth.UserID,
 	})
 	if err != nil {
