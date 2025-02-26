@@ -46,7 +46,6 @@ func main() {
 	// Start HTTP Server
 	srv := initHTTPServer(conf, services)
 	go func() {
-		// service connections
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Panicf("listen: %s\n", err)
 		}
