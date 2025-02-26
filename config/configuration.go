@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var config *Configuration
+var config Configuration
 
 type Configuration struct {
 	MysqlDB    MysqlDatabase    `mapstructure:"mysql"`
@@ -18,7 +18,7 @@ type Configuration struct {
 }
 
 func Init(filePath string) {
-	var configuration *Configuration
+	var configuration Configuration
 
 	viper.SetConfigFile(filePath)
 	viper.SetConfigType("yaml")
@@ -35,6 +35,6 @@ func Init(filePath string) {
 	config = configuration
 }
 
-func GetConfiguration() *Configuration {
+func GetConfiguration() Configuration {
 	return config
 }

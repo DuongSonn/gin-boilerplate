@@ -12,7 +12,7 @@ import (
 	postgres_repository "oauth-server/app/repository/postgres"
 	"oauth-server/app/service"
 	"oauth-server/config"
-	"oauth-server/external/user"
+	"oauth-server/grpc/user"
 	"oauth-server/package/database"
 	logger "oauth-server/package/log"
 	_validator "oauth-server/package/validator"
@@ -42,48 +42,16 @@ func main() {
 	helpers := helper.RegisterHelpers(postgresRepo)
 	services := service.RegisterServices(helpers, postgresRepo)
 
-	// Run gin server
-	gin.SetMode(conf.Server.Mode)
-	app := gin.Default()
-	app.Use(sentrygin.New(sentrygin.Options{
-		Repanic: true,
-	}))
-
-	// Register validator
-	v := binding.Validator.Engine().(*validator.Validate)
-	v.SetTagName("validate")
-	_validator.RegisterCustomValidators(v)
-
-	// Register controllers
-	app.GET("/health-check", func(c *gin.Context) {
-		c.String(200, "OK")
-	})
-	controller.RegisterControllers(app, services)
-
-	// Start server
-	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", conf.Server.Port),
-		Handler: app,
-	}
+	// Start HTTP Server
+	srv := initHTTPServer(conf, services)
 	go func() {
-		// service connections
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Panicf("listen: %s\n", err)
 		}
 	}()
 
 	// Start GRPC Server
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", conf.GRPC.Port))
-	if err != nil {
-		log.Panicf("GRPC Failed to listen: %v", err)
-		return
-	}
-
-	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(mws.RPCMiddleware.Handler),
-	}
-	grpcServer := grpc.NewServer(opts...)
-	user.RegisterUserServiceServer(grpcServer, user.NewUserServiceServer(postgresRepo, helpers))
+	lis, grpcServer := initGRPCServer(conf, postgresRepo, helpers, mws)
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Panicf("GRPC Failed to serve: %v", err)
@@ -128,4 +96,54 @@ func init() {
 	}); err != nil {
 		log.Panicf("Sentry initialization failed: %v\n", err)
 	}
+}
+
+func initHTTPServer(conf config.Configuration, services service.ServiceCollections) *http.Server {
+	// Run gin server
+	gin.SetMode(conf.Server.Mode)
+	app := gin.Default()
+	app.Use(sentrygin.New(sentrygin.Options{
+		Repanic: true,
+	}))
+
+	// Register validator
+	v := binding.Validator.Engine().(*validator.Validate)
+	v.SetTagName("validate")
+	_validator.RegisterCustomValidators(v)
+
+	// Register controllers
+	app.GET("/health-check", func(c *gin.Context) {
+		c.String(200, "OK")
+	})
+	controller.RegisterControllers(app, services)
+
+	// Start server
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", conf.Server.Port),
+		Handler: app,
+	}
+
+	return srv
+}
+
+func initGRPCServer(
+	conf config.Configuration,
+	postgresRepo postgres_repository.PostgresRepositoryCollections,
+	helpers helper.HelperCollections,
+	mws middleware.MiddlewareCollections,
+) (net.Listener, *grpc.Server) {
+	// Start GRPC Server
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", conf.GRPC.Port))
+	if err != nil {
+		log.Panicf("GRPC Failed to listen: %v", err)
+		return nil, nil
+	}
+
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(mws.RPCMiddleware.Handler),
+	}
+	grpcServer := grpc.NewServer(opts...)
+	user.RegisterUserServiceServer(grpcServer, user.NewUserServiceServer(postgresRepo, helpers))
+
+	return lis, grpcServer
 }

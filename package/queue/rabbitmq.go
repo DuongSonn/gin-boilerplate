@@ -159,6 +159,7 @@ func SendRPCRabbitMQ(queueConf RabbitMQRPCQueue) {
 			CorrelationId: ID,
 			ReplyTo:       queueConf.Client.RoutingKey,
 			Body:          []byte("Test RPC"),
+			Expiration:    "5000", // 5 seconds
 		},
 	); err != nil {
 		logger.GetLogger().Info("PublishWithContext RabbitMQ", slog.String("error", err.Error()))
