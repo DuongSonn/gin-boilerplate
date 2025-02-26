@@ -40,13 +40,13 @@ const (
 var messages = map[int]map[string]string{
 	// Validator
 	ErrCodeValidatorRequired: {
-		LangVN: "không được bỏ trống. Vui lòng kiểm tra lại",
+		LangVN: "%s không được bỏ trống. Vui lòng kiểm tra lại",
 	},
 	ErrCodeValidatorFormat: {
-		LangVN: "không hợp lệ. Vui lòng kiểm tra lại",
+		LangVN: "%s không hợp lệ. Vui lòng kiểm tra lại",
 	},
 	ErrCodeValidatorVerifiedData: {
-		LangVN: "không chính xác. Vui lòng kiểm tra lại",
+		LangVN: "%s không chính xác. Vui lòng kiểm tra lại",
 	},
 
 	ErrCodeInternalServerError: {
@@ -105,12 +105,21 @@ func NewValidatorError(err error) *CustomError {
 		code := convertValidatorTag(tag)
 		return &CustomError{
 			Code:    code,
-			Message: fmt.Sprintf("%s %s", field, messages[code][LangVN]),
+			Message: GetCustomMessage(code, field),
 		}
 
 	}
 
 	return New(ErrCodeInternalServerError)
+}
+
+func GetCustomMessage(code int, args ...any) string {
+	msg, ok := messages[code][LangVN]
+	if !ok {
+		return messages[ErrCodeInternalServerError][LangVN]
+	}
+
+	return fmt.Sprintf(msg, args...)
 }
 
 func GetMessage(code int) string {

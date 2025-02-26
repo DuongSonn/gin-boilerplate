@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Init(db *gorm.DB) repository.RepositoryCollections {
+func RegisterPostgresRepositories(db *gorm.DB) repository.RepositoryCollections {
 	postgresUserRepo := NewPostgresUserRepository(db)
 	postgresOAuthRepo := NewPostgresOAuthRepository(db)
 

@@ -9,6 +9,7 @@ import (
 	"oauth-server/app/controller"
 	"oauth-server/app/helper"
 	"oauth-server/app/middleware"
+	"oauth-server/app/repository"
 	postgres_repository "oauth-server/app/repository/postgres"
 	"oauth-server/app/service"
 	"oauth-server/config"
@@ -35,7 +36,7 @@ func main() {
 
 	// Register repositories
 	postgresDB := database.GetPostgres()
-	postgresRepo := postgres_repository.Init(postgresDB)
+	postgresRepo := postgres_repository.RegisterPostgresRepositories(postgresDB)
 	mws := middleware.RegisterMiddleware()
 
 	// Register Others
@@ -128,7 +129,7 @@ func initHTTPServer(conf config.Configuration, services service.ServiceCollectio
 
 func initGRPCServer(
 	conf config.Configuration,
-	postgresRepo postgres_repository.PostgresRepositoryCollections,
+	postgresRepo repository.RepositoryCollections,
 	helpers helper.HelperCollections,
 	mws middleware.MiddlewareCollections,
 ) (net.Listener, *grpc.Server) {
