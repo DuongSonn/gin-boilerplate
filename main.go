@@ -13,6 +13,7 @@ import (
 	postgres_repository "oauth-server/app/repository/postgres"
 	"oauth-server/app/service"
 	"oauth-server/config"
+	custom_graphql "oauth-server/graphql"
 	"oauth-server/grpc/user"
 	"oauth-server/package/database"
 	logger "oauth-server/package/log"
@@ -22,6 +23,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	user_resolver "oauth-server/graphql/user"
 
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
@@ -147,4 +150,16 @@ func initGRPCServer(
 	user.RegisterUserServiceServer(grpcServer, user.NewUserServiceServer(postgresRepo, helpers))
 
 	return lis, grpcServer
+}
+
+func initGraphQL(conf config.Configuration, services service.ServiceCollections) {
+	resolvers := []interface{}{
+		user_resolver.NewUserResolver(services),
+	}
+
+	schema, err := custom_graphql.NewSchema(resolvers)
+	if err != nil {
+		log.Panicf("Failed to create schema: %v", err)
+	}
+
 }
