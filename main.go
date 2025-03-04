@@ -31,6 +31,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/graphql-go/handler"
 	"google.golang.org/grpc"
 )
 
@@ -120,6 +121,7 @@ func initHTTPServer(conf config.Configuration, services service.ServiceCollectio
 		c.String(200, "OK")
 	})
 	controller.RegisterControllers(app, services)
+	initGraphQL(app, conf, services)
 
 	// Start server
 	srv := &http.Server{
@@ -152,7 +154,7 @@ func initGRPCServer(
 	return lis, grpcServer
 }
 
-func initGraphQL(conf config.Configuration, services service.ServiceCollections) {
+func initGraphQL(app *gin.Engine, conf config.Configuration, services service.ServiceCollections) {
 	resolvers := []interface{}{
 		user_resolver.NewUserResolver(services),
 	}
@@ -162,4 +164,11 @@ func initGraphQL(conf config.Configuration, services service.ServiceCollections)
 		log.Panicf("Failed to create schema: %v", err)
 	}
 
+	h := handler.New(&handler.Config{
+		Schema:   &schema,
+		Pretty:   true,
+		GraphiQL: true,
+	})
+
+	app.POST("/graphql", gin.WrapH(h))
 }
