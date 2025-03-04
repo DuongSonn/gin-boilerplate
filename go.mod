@@ -5,11 +5,26 @@ go 1.22.12
 toolchain go1.24.0
 
 require (
+	github.com/99designs/gqlgen v0.17.66
 	github.com/getsentry/sentry-go v0.31.1
 	github.com/getsentry/sentry-go/gin v0.31.1
 	github.com/google/uuid v1.6.0
-	github.com/graphql-go/graphql v0.8.1
+	github.com/hashicorp/golang-lru/v2 v2.0.7
+	github.com/vektah/gqlparser/v2 v2.5.22
 	google.golang.org/grpc v1.70.0
+)
+
+require (
+	github.com/agnivade/levenshtein v1.2.0 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
+	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/sosodev/duration v1.3.1 // indirect
+	github.com/urfave/cli/v2 v2.27.5 // indirect
+	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
+	golang.org/x/mod v0.23.0 // indirect
+	golang.org/x/tools v0.30.0 // indirect
 )
 
 require (
@@ -43,7 +58,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.20.0
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/graphql-go/handler v0.2.4
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect

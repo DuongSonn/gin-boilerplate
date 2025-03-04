@@ -13,7 +13,8 @@ import (
 	postgres_repository "oauth-server/app/repository/postgres"
 	"oauth-server/app/service"
 	"oauth-server/config"
-	custom_graphql "oauth-server/graphql"
+	"oauth-server/graphql/generated"
+	"oauth-server/graphql/resolver"
 	"oauth-server/grpc/user"
 	"oauth-server/package/database"
 	logger "oauth-server/package/log"
@@ -24,15 +25,18 @@ import (
 	"syscall"
 	"time"
 
-	user_resolver "oauth-server/graphql/user"
-
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/graphql-go/handler"
+	"github.com/vektah/gqlparser/v2/ast"
 	"google.golang.org/grpc"
+
+	"github.com/99designs/gqlgen/graphql/handler/lru"
 )
 
 func main() {
@@ -121,7 +125,7 @@ func initHTTPServer(conf config.Configuration, services service.ServiceCollectio
 		c.String(200, "OK")
 	})
 	controller.RegisterControllers(app, services)
-	initGraphQL(app, conf, services)
+	app.POST("/query", registerGraphQL(services))
 
 	// Start server
 	srv := &http.Server{
@@ -154,21 +158,24 @@ func initGRPCServer(
 	return lis, grpcServer
 }
 
-func initGraphQL(app *gin.Engine, conf config.Configuration, services service.ServiceCollections) {
-	resolvers := []interface{}{
-		user_resolver.NewUserResolver(services),
-	}
+func registerGraphQL(
+	services service.ServiceCollections,
+) gin.HandlerFunc {
+	h := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{
+		Services: services,
+	}}))
 
-	schema, err := custom_graphql.NewSchema(resolvers)
-	if err != nil {
-		log.Panicf("Failed to create schema: %v", err)
-	}
+	h.AddTransport(transport.Options{})
+	h.AddTransport(transport.GET{})
+	h.AddTransport(transport.POST{})
 
-	h := handler.New(&handler.Config{
-		Schema:   &schema,
-		Pretty:   true,
-		GraphiQL: true,
+	h.SetQueryCache(lru.New[*ast.QueryDocument](1000))
+	h.Use(extension.Introspection{})
+	h.Use(extension.AutomaticPersistedQuery{
+		Cache: lru.New[string](100),
 	})
 
-	app.POST("/graphql", gin.WrapH(h))
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
 }
