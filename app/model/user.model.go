@@ -1,5 +1,7 @@
 package model
 
+import "oauth-server/app/entity"
+
 type LoginRequest struct {
 	Password    string  `json:"password" validate:"required"`
 	Email       *string `json:"email" validate:"omitempty,email"`
@@ -17,6 +19,7 @@ type RegisterRequest struct {
 	PhoneNumber     *string `json:"phone_number" validate:"omitempty,phone_number"`
 }
 type RegisterResponse struct {
+	User *entity.User `json:"user,omitempty"`
 }
 
 type LogoutRequest struct {

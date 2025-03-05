@@ -21,6 +21,9 @@ type User struct {
 	IsActive    bool      `json:"is_active" gorm:"default:true;type:bool;not null"`
 	CreatedAt   int64     `json:"created_at" gorm:"type:integer;not null"`
 	UpdatedAt   int64     `json:"updated_at" gorm:"type:integer;not null"`
+
+	// Relations
+	OAuths []*OAuth `json:"o_auths" gorm:"foreignKey:UserID"`
 }
 
 func NewUser() *User {

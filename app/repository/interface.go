@@ -12,8 +12,8 @@ type RepositoryCollections struct {
 	OAuthRepo OAuthRepository
 }
 type UserRepository interface {
-	Create(ctx context.Context, tx *gorm.DB, user *entity.User) error
-	Update(ctx context.Context, tx *gorm.DB, user *entity.User) error
+	Create(ctx context.Context, tx *gorm.DB, user *entity.User) (*entity.User, error)
+	Update(ctx context.Context, tx *gorm.DB, user *entity.User) (*entity.User, error)
 	Delete(ctx context.Context, tx *gorm.DB, user *entity.User) error
 	BulkCreate(ctx context.Context, tx *gorm.DB, users []entity.User) error
 	FindOneByFilter(ctx context.Context, tx *gorm.DB, filter *FindUserByFilter) (*entity.User, error)
@@ -21,7 +21,7 @@ type UserRepository interface {
 }
 
 type OAuthRepository interface {
-	Create(ctx context.Context, tx *gorm.DB, oauth *entity.Oauth) error
-	Update(ctx context.Context, tx *gorm.DB, oauth *entity.Oauth) error
-	FindOneByFilter(ctx context.Context, tx *gorm.DB, filter *FindOAuthByFilter) (*entity.Oauth, error)
+	Create(ctx context.Context, tx *gorm.DB, oauth *entity.OAuth) (*entity.OAuth, error)
+	Update(ctx context.Context, tx *gorm.DB, oauth *entity.OAuth) (*entity.OAuth, error)
+	FindOneByFilter(ctx context.Context, tx *gorm.DB, filter *FindOAuthByFilter) (*entity.OAuth, error)
 }

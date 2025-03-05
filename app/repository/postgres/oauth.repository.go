@@ -22,35 +22,35 @@ func NewPostgresOAuthRepository(db *gorm.DB) repository.OAuthRepository {
 func (r *oAuthRepository) Create(
 	ctx context.Context,
 	tx *gorm.DB,
-	oauth *entity.Oauth,
-) error {
+	oauth *entity.OAuth,
+) (*entity.OAuth, error) {
 	if tx != nil {
-		return tx.WithContext(ctx).Create(&oauth).Error
+		return oauth, tx.WithContext(ctx).Create(&oauth).Error
 	}
 
-	return r.db.WithContext(ctx).Create(&oauth).Error
+	return oauth, r.db.WithContext(ctx).Create(&oauth).Error
 }
 
 func (r *oAuthRepository) Update(
 	ctx context.Context,
 	tx *gorm.DB,
-	oauth *entity.Oauth,
-) error {
+	oauth *entity.OAuth,
+) (*entity.OAuth, error) {
 	oauth.UpdatedAt = time.Now().Unix()
 
 	if tx != nil {
-		return tx.WithContext(ctx).Save(&oauth).Error
+		return oauth, tx.WithContext(ctx).Save(&oauth).Error
 	}
 
-	return r.db.WithContext(ctx).Save(&oauth).Error
+	return oauth, r.db.WithContext(ctx).Save(&oauth).Error
 }
 
 func (r *oAuthRepository) FindOneByFilter(
 	ctx context.Context,
 	tx *gorm.DB,
 	filter *repository.FindOAuthByFilter,
-) (*entity.Oauth, error) {
-	var data *entity.Oauth
+) (*entity.OAuth, error) {
+	var data *entity.OAuth
 
 	query := r.db.WithContext(ctx)
 	if tx != nil {

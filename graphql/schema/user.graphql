@@ -1,9 +1,23 @@
+scalar UUID
+
 type User {
-    id: ID!
+    id: UUID!
     email: String!
     phone_number: String!
     created_at: Int!
     updated_at: Int!
+    o_auths: [OAuth!]
+}
+
+type OAuth {
+    id: UUID!
+    user_id: UUID!
+    ip: String!
+    platform: String!
+    token: String!
+    status: String!
+    expire_at: Int!
+    login_at: Int!
 }
 
 type Query {
@@ -17,7 +31,17 @@ input CreateUserInput {
     password: String!
     confirm_password: String!
 }
+input UpdateUserInput {
+    email: String
+    phone_number: String
+}
+input UpdatePasswordInput {
+    password: String!
+    confirm_password: String!
+}
 
 type Mutation {
     createUser(input: CreateUserInput!): User!
+    updateUser(id: ID!, input: UpdateUserInput!): User!
+    updatePassword(id: ID!, input: UpdatePasswordInput!): User!
 }

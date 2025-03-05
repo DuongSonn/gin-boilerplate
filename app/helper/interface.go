@@ -12,5 +12,5 @@ type OauthHelper interface {
 }
 
 type UserHelper interface {
-	CreateUser(ctx context.Context, data *model.RegisterRequest) error
+	CreateUser(ctx context.Context, data *model.RegisterRequest) (*entity.User, error)
 }

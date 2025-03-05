@@ -106,7 +106,7 @@ func (s *userServiceServer) CreateUsers(stream UserService_CreateUsersServer) er
 
 			return status.Error(codes.Internal, errors.GetMessage(errors.ErrCodeInternalServerError))
 		}
-		if err := s.helpers.UserHelper.CreateUser(stream.Context(), &model.RegisterRequest{
+		if _, err := s.helpers.UserHelper.CreateUser(stream.Context(), &model.RegisterRequest{
 			PhoneNumber: user.PhoneNumber,
 			Email:       user.Email,
 			Password:    user.GetPassword(),

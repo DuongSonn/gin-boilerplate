@@ -22,7 +22,7 @@ func newUserHelper(
 	}
 }
 
-func (h *userHelper) CreateUser(ctx context.Context, data *model.RegisterRequest) error {
+func (h *userHelper) CreateUser(ctx context.Context, data *model.RegisterRequest) (*entity.User, error) {
 	// Check user exited
 	existedUser, err := h.postgresRepo.UserRepo.FindManyByFilter(ctx, nil, &repository.FindUserByFilter{
 		PhoneNumber: data.PhoneNumber,
@@ -38,10 +38,10 @@ func (h *userHelper) CreateUser(ctx context.Context, data *model.RegisterRequest
 			),
 			slog.String("error", err.Error()),
 		)
-		return errors.New(errors.ErrCodeInternalServerError)
+		return nil, errors.New(errors.ErrCodeInternalServerError)
 	}
 	if len(existedUser) > 0 {
-		return errors.New(errors.ErrCodeUserExisted)
+		return nil, errors.New(errors.ErrCodeUserExisted)
 	}
 
 	// Create user
@@ -49,7 +49,8 @@ func (h *userHelper) CreateUser(ctx context.Context, data *model.RegisterRequest
 	user.PhoneNumber = data.PhoneNumber
 	user.Email = data.Email
 	user.Password = data.Password
-	if err := h.postgresRepo.UserRepo.Create(ctx, nil, user); err != nil {
+	createdUser, err := h.postgresRepo.UserRepo.Create(ctx, nil, user)
+	if err != nil {
 		logger.GetLogger().Info(
 			"Create",
 			slog.Group(
@@ -60,8 +61,8 @@ func (h *userHelper) CreateUser(ctx context.Context, data *model.RegisterRequest
 			slog.String("error", err.Error()),
 		)
 
-		return errors.New(errors.ErrCodeInternalServerError)
+		return nil, errors.New(errors.ErrCodeInternalServerError)
 	}
 
-	return nil
+	return createdUser, nil
 }

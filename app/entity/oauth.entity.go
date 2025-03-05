@@ -21,7 +21,7 @@ const (
 	OAuthStatusBlocked  = "blocked"
 )
 
-type Oauth struct {
+type OAuth struct {
 	ID        uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
 	UserID    uuid.UUID `json:"user_id" gorm:"type:uuid;not null"`
 	IP        string    `json:"ip" gorm:"type:text;not null"`
@@ -34,13 +34,13 @@ type Oauth struct {
 	LoginAt   int64     `json:"login_at" gorm:"type:integer"`
 }
 
-func NewOAuth() *Oauth {
-	return &Oauth{
+func NewOAuth() *OAuth {
+	return &OAuth{
 		CreatedAt: time.Now().Unix(),
 		UpdatedAt: time.Now().Unix(),
 	}
 }
 
-func (Oauth) TableName() string {
+func (OAuth) TableName() string {
 	return OAUTH_TABLE_NAME
 }

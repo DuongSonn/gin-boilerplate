@@ -24,26 +24,26 @@ func (r *userRepository) Create(
 	ctx context.Context,
 	tx *gorm.DB,
 	user *entity.User,
-) error {
+) (*entity.User, error) {
 	if tx != nil {
-		return tx.WithContext(ctx).Create(&user).Error
+		return user, tx.WithContext(ctx).Create(&user).Error
 	}
 
-	return r.db.WithContext(ctx).Create(&user).Error
+	return user, r.db.WithContext(ctx).Create(&user).Error
 }
 
 func (r *userRepository) Update(
 	ctx context.Context,
 	tx *gorm.DB,
 	user *entity.User,
-) error {
+) (*entity.User, error) {
 	user.UpdatedAt = time.Now().Unix()
 
 	if tx != nil {
-		return tx.WithContext(ctx).Save(&user).Error
+		return user, tx.WithContext(ctx).Save(&user).Error
 	}
 
-	return r.db.WithContext(ctx).Save(&user).Error
+	return user, r.db.WithContext(ctx).Save(&user).Error
 }
 
 func (r *userRepository) Delete(

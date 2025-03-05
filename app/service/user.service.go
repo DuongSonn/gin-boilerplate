@@ -34,7 +34,7 @@ func NewUserService(
 
 func (s *userService) Login(ctx context.Context, data *model.LoginRequest) (*model.LoginResponse, error) {
 	var (
-		userOAuth *entity.Oauth
+		userOAuth *entity.OAuth
 	)
 
 	// Check user exit
@@ -82,7 +82,7 @@ func (s *userService) Login(ctx context.Context, data *model.LoginRequest) (*mod
 	userOAuth.Token = refreshToken
 	userOAuth.ExpireAt = time.Now().Add(utils.USER_REFRESH_TOKEN_IAT * time.Second).Unix()
 	userOAuth.LoginAt = time.Now().Unix()
-	if err := s.postgresRepo.OAuthRepo.Update(ctx, tx, userOAuth); err != nil {
+	if _, err := s.postgresRepo.OAuthRepo.Update(ctx, tx, userOAuth); err != nil {
 		logger.GetLogger().Info(
 			"UpdateOAuth",
 			slog.Group(
@@ -104,7 +104,8 @@ func (s *userService) Login(ctx context.Context, data *model.LoginRequest) (*mod
 }
 
 func (s *userService) Register(ctx context.Context, data *model.RegisterRequest) (*model.RegisterResponse, error) {
-	if err := s.helpers.UserHelper.CreateUser(ctx, data); err != nil {
+	user, err := s.helpers.UserHelper.CreateUser(ctx, data)
+	if err != nil {
 		return nil, err
 	}
 	go queue.SendRPCRabbitMQ(queue.RabbitMQRPCQueue{
@@ -122,7 +123,9 @@ func (s *userService) Register(ctx context.Context, data *model.RegisterRequest)
 		},
 	})
 
-	return &model.RegisterResponse{}, nil
+	return &model.RegisterResponse{
+		User: user,
+	}, nil
 }
 
 func (s *userService) Logout(ctx context.Context, data *model.LogoutRequest) (*model.LogoutResponse, error) {
@@ -139,7 +142,8 @@ func (s *userService) Logout(ctx context.Context, data *model.LogoutRequest) (*m
 	// Deactivate User OAuth
 	tx := database.BeginPostgresTransaction()
 	userOAuth.Status = entity.OAuthStatusInactive
-	if err := s.postgresRepo.OAuthRepo.Update(ctx, tx, userOAuth); err != nil {
+
+	if _, err := s.postgresRepo.OAuthRepo.Update(ctx, tx, userOAuth); err != nil {
 		tx.WithContext(ctx).Rollback()
 		return nil, errors.New(errors.ErrCodeInternalServerError)
 	}
