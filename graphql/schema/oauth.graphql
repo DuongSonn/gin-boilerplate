@@ -1,0 +1,45 @@
+type OAuth {
+    id: UUID!
+    user_id: UUID!
+    ip: String!
+    platform: OAuthPlatform!
+    token: String!
+    status: OAuthStatus!
+    expire_at: Time!
+    created_at: Time!
+    updated_at: Time!
+    login_at: Time
+    user: User!
+}
+
+type OAuthQuery {
+    list(limit: Int, offset: Int, user_id: UUID, platform: OAuthPlatform, status: OAuthStatus): [OAuth!]!
+    get(id: UUID!): OAuth
+    active_list(user_id: UUID!): [OAuth!]!
+}
+
+type OAuthMutation {
+    create(input: CreateOAuthInput!): OAuth!
+    update_status(id: UUID!, status: OAuthStatus!): OAuth!
+    revoke(id: UUID!): Boolean!
+    revoke_all(user_id: UUID!): Boolean!
+}
+
+enum OAuthPlatform {
+    MOBILE
+    WEB
+}
+
+enum OAuthStatus {
+    ACTIVE
+    INACTIVE
+    BLOCKED
+}
+
+input CreateOAuthInput {
+    user_id: UUID!
+    ip: String!
+    platform: OAuthPlatform!
+    token: String!
+    expire_at: Time!
+}

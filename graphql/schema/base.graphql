@@ -1,0 +1,12 @@
+scalar Time
+scalar UUID
+
+type Query {
+    user: UserQuery
+    o_auth: OAuthQuery
+}
+
+type Mutation {
+    user: UserMutation
+    o_auth: OAuthMutation
+}
