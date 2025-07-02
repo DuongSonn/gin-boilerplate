@@ -27,6 +27,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
@@ -36,7 +37,7 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"google.golang.org/grpc"
 
-	"github.com/99designs/gqlgen/graphql/handler/lru"
+	_ "ariga.io/atlas-provider-gorm/gormschema"
 )
 
 func main() {

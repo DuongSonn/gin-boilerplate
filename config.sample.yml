@@ -1,22 +1,22 @@
 mysql:
-  host: 127.0.0.1
-  port: 30543
-  user: postgres
-  password: 123456
-  database: authentication
+    host: 127.0.0.1
+    port: 30543
+    user: postgres
+    password: 123456
+    database: oauth
 
 postgres:
-  host: 127.0.0.1
-  port: 30543
-  user: postgres
-  password: 123456
-  database: authentication
+    host: 127.0.0.1
+    port: 30543
+    user: postgres
+    password: 123456
+    database: oauth
 
 server:
-  port: 3000
-  mode: debug # release or debug
+    port: 3000
+    mode: debug # release or debug
 
 jwt:
-  issuer: "local-app"
-  user_access_token_key: "1505440689"
-  user_refresh_token_key: "0790673021"
+    issuer: "local-app"
+    user_access_token_key: "1505440689"
+    user_refresh_token_key: "0790673021"

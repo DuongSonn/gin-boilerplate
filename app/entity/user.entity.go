@@ -14,7 +14,7 @@ const (
 
 type User struct {
 	gorm.Model
-	ID          uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	ID          uuid.UUID `json:"id" gorm:"primaryKey;type:uuid"`
 	Email       *string   `json:"email" gorm:"type:varchar(100);"`
 	PhoneNumber *string   `json:"phone_number" gorm:"type:varchar(20);"`
 	Password    string    `json:"password" gorm:"type:text;not null"`
@@ -28,6 +28,7 @@ type User struct {
 
 func NewUser() *User {
 	return &User{
+		ID:        uuid.New(),
 		CreatedAt: time.Now().Unix(),
 		UpdatedAt: time.Now().Unix(),
 	}

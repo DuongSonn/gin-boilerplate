@@ -1,6 +1,7 @@
 # Varibles
 GOCMD := go
 AIRCMD := air
+ATLCMD := atlas
 
 FILE  ?= ""
 
@@ -10,11 +11,8 @@ dev:
 run:
 	$(GOCMD) run main.go
 
-migrate-create:
-	$(GOCMD) run cmd/migrations/main.go create $(FILE)
+migrate:
+	$(ATLCMD) migrate diff --env gorm
 
-migrate-up:
-	$(GOCMD) run cmd/migrations/main.go up $(FILE)
-
-migrate-down:
-	$(GOCMD) run cmd/migrations/main.go down $(FILE)
+migrate-sync:
+	$(ATLCMD) migrate hash

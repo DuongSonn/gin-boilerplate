@@ -1,22 +1,22 @@
 version: "3.8"
 services:
-    # postgres:
-    #   image: postgres
-    #   environment:
-    #     POSTGRES_PASSWORD: 123456
-    #   volumes:
-    #     - ./volumes/posgres:/var/lib/postgresql/data
-    #   ports:
-    #     - "5432:5432"
+    postgres:
+        image: postgres
+        environment:
+            POSTGRES_PASSWORD: 123456
+        volumes:
+            - ./volumes/posgres:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
     # phpmyadmin:
-    #   image: dpage/pgadmin4
-    #   depends_on:
-    #     - postgres
-    #   ports:
-    #     - "9000:80"
-    #   environment:
-    #     PGADMIN_DEFAULT_PASSWORD: 123456
-    #     PGADMIN_DEFAULT_EMAIL: root@gmail.com
+    #     image: dpage/pgadmin4
+    #     depends_on:
+    #         - postgres
+    #     ports:
+    #         - "9000:80"
+    #     environment:
+    #         PGADMIN_DEFAULT_PASSWORD: 123456
+    #         PGADMIN_DEFAULT_EMAIL: root@gmail.com
     redis:
         image: redis
         ports:
@@ -34,6 +34,15 @@ services:
             - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
             - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
             - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    kafka-ui:
+        container_name: kafka-ui
+        image: provectuslabs/kafka-ui:latest
+        ports:
+            - 1000:8080
+        environment:
+            DYNAMIC_CONFIG_ENABLED: true
+        volumes:
+            - ./volumes/kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml
 
 networks:
     local-app:
